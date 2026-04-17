@@ -220,6 +220,35 @@ const SESSIONS = [
     ]
   },
   // ── PASTE NEW SESSIONS BELOW THIS LINE ──
+  {
+    id:'s2', date:'Apr 18, 2025', label:'APR 18',
+    matches:[
+      { map:'Poseidon', score:'7–9', winner:'T',
+        ct:[{name:'Kabooooom',k:14,d:7,a:1,score:32,adr:87},{name:'Orh+',k:7,d:13,a:4,score:18,adr:65}],
+        t: [{name:'SilentOat',k:11,d:12,a:1,score:25,adr:78},{name:'MrFancyPants',k:9,d:9,a:1,score:23,adr:68}] },
+      { map:'Sanctum', score:'9–4', winner:'T',
+        ct:[{name:'Kabooooom',k:6,d:10,a:2,score:17,adr:70},{name:'Orh+',k:6,d:11,a:3,score:15,adr:58}],
+        t: [{name:'SilentOat',k:13,d:6,a:2,score:34,adr:104},{name:'MrFancyPants',k:8,d:6,a:2,score:22,adr:86}] },
+      { map:'Overpass', score:'9–7', winner:'T',
+        ct:[{name:'SilentOat',k:13,d:10,a:0,score:28,adr:81},{name:'Orh+',k:5,d:12,a:3,score:13,adr:47}],
+        t: [{name:'Kabooooom',k:14,d:10,a:1,score:34,adr:90},{name:'MrFancyPants',k:8,d:8,a:2,score:18,adr:57}] },
+      { map:'Inferno', score:'9–1', winner:'CT',
+        ct:[{name:'Kabooooom',k:11,d:2,a:3,score:29,adr:111},{name:'MrFancyPants',k:8,d:4,a:3,score:18,adr:78}],
+        t: [{name:'SilentOat',k:4,d:9,a:0,score:8,adr:52},{name:'Orh+',k:2,d:10,a:1,score:5,adr:41}] },
+      { map:'Nuke', score:'9–6', winner:'T',
+        ct:[{name:'SilentOat',k:9,d:11,a:1,score:17,adr:76},{name:'Orh+',k:5,d:11,a:0,score:12,adr:43}],
+        t: [{name:'Kabooooom',k:10,d:8,a:5,score:24,adr:96},{name:'MrFancyPants',k:12,d:6,a:2,score:23,adr:76}] },
+      { map:'Brewery', score:'6–9', winner:'CT',
+        ct:[{name:'Orh+',k:10,d:9,a:3,score:27,adr:84},{name:'Kabooooom',k:9,d:6,a:1,score:22,adr:63}],
+        t: [{name:'SilentOat',k:8,d:10,a:3,score:21,adr:73},{name:'MrFancyPants',k:7,d:9,a:0,score:17,adr:45}] },
+      { map:'Memento', score:'7–9', winner:'T',
+        ct:[{name:'Orh+',k:10,d:10,a:2,score:26,adr:78},{name:'SilentOat',k:11,d:10,a:1,score:25,adr:68}],
+        t: [{name:'Kabooooom',k:13,d:10,a:1,score:30,adr:97},{name:'MrFancyPants',k:7,d:11,a:2,score:20,adr:48}] },
+      { map:'Palais', score:'8–8', winner:'TIE',
+        ct:[{name:'Orh+',k:14,d:9,a:3,score:30,adr:112},{name:'SilentOat',k:7,d:12,a:1,score:19,adr:45}],
+        t: [{name:'Kabooooom',k:14,d:8,a:0,score:33,adr:86},{name:'MrFancyPants',k:7,d:13,a:2,score:16,adr:59}] },
+    ]
+  },
   // {
   //   id:'s2', date:'Apr 20, 2025', label:'APR 20',
   //   matches:[ ... ]
@@ -228,7 +257,7 @@ const SESSIONS = [
 
 // ─── STATE ───────────────────────────────────
 let scope = 'all';
-let activeSess = SESSIONS[SESSIONS.length-1].id;
+let activeSess = SESSIONS[SESSIONS.length-1].id; // auto-points to latest
 let lbSortKey = 'score';
 let lbSortDir = 1;
 let currentPs = [];
