@@ -481,7 +481,7 @@ function render() {
   h+=`</tbody><tfoot><tr><td>Avg ADR</td>${ps.map(p=>`<td style="color:${PC[p.name]}">${p.avgAdr??'—'}</td>`).join('')}<td></td></tr></tfoot></table></div></div>`;
 
   // chart canvas
-  h+=`<div class="adr-chart-wrap"><div class="act">ADR Trend${scope==='all'&&SESSIONS.length>1?' — All Sessions':''}</div><canvas id="adrC" style="width:100%;max-height:220px;"></canvas></div>`;
+  h+=`<div class="adr-chart-wrap"><div class="act">ADR Trend${scope==='all'&&SESSIONS.length>1?' — All Sessions':''}</div><canvas id="adrC" style="width:100%;max-height:220px;"></canvas><div id="chart-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;"></div></div>`;
 
   // insights
   const swings=ps.map(p=>{
@@ -521,6 +521,7 @@ function render() {
   h+=buildStandouts(matches,ps);
 
   document.getElementById('app').innerHTML=h;
+  chartHighlight = null;
   currentPs = ps;
   renderLeaderboard();
   renderKills();
@@ -608,7 +609,26 @@ function buildStandouts(matches,ps){
   return `<div class="stat-cards">${cards.map(c=>`<div class="stat-card"><span class="sci">${c.i}</span><div class="scv">${c.v??'—'}</div><div class="scd">${c.d}</div><div class="scp">${c.p??''}</div></div>`).join('')}</div>`;
 }
 
+let chartHighlight = null; // null = all visible, else player name
+let chartState = { adrRows:[], ps:[] };
+
+function toggleChartPlayer(name) {
+  chartHighlight = chartHighlight === name ? null : name;
+  // update legend buttons
+  document.querySelectorAll('.chart-leg-btn').forEach(b => {
+    const active = chartHighlight === null || b.dataset.name === chartHighlight;
+    b.style.opacity = active ? '1' : '0.3';
+    b.style.borderColor = active ? PCSS[b.dataset.name] : '#1e2a3a';
+  });
+  redrawChart();
+}
+
+function redrawChart() {
+  drawChart(chartState.adrRows, chartState.ps);
+}
+
 function drawChart(adrRows,ps){
+  chartState = { adrRows, ps };
   requestAnimationFrame(()=>{
     const canvas=document.getElementById('adrC'); if(!canvas) return;
     const W=canvas.parentElement.clientWidth-40, H=200;
@@ -621,7 +641,7 @@ function drawChart(adrRows,ps){
     const allV=series.flatMap(s=>s.data).filter(v=>v!=null);
     if(!allV.length) return;
     const n=adrRows.length;
-    const pL=50,pR=16,pT=22,pB=42;
+    const pL=50,pR=16,pT=22,pB=28;
     const minV=Math.floor(Math.min(...allV)/10)*10-5;
     const maxV=Math.ceil(Math.max(...allV)/10)*10+5;
     const sx=i=>n>1?pL+(i/(n-1))*(W-pL-pR):W/2;
@@ -652,34 +672,64 @@ function drawChart(adrRows,ps){
       });
     }
 
-    series.forEach(s=>{
+    // draw grayed series first, then highlighted on top
+    const drawOrder = chartHighlight
+      ? [...series.filter(s=>s.label!==chartHighlight), series.find(s=>s.label===chartHighlight)]
+      : series;
+
+    drawOrder.forEach(s=>{
+      if(!s) return;
+      const isHL = chartHighlight === null || s.label === chartHighlight;
+      const col = isHL ? s.color : '#2a3a4a';
+      const alpha = isHL ? 1 : 0.4;
+
       const pts=s.data.map((v,i)=>v!=null?{x:sx(i),y:sy(v)}:null);
       const vpts=pts.filter(Boolean); if(!vpts.length) return;
-      const grad=ctx.createLinearGradient(0,pT,0,H-pB);
-      grad.addColorStop(0,s.color+'28');grad.addColorStop(1,s.color+'00');
-      ctx.beginPath();let fi=true;
-      pts.forEach(pt=>{if(!pt)return;if(fi){ctx.moveTo(pt.x,pt.y);fi=false;}else ctx.lineTo(pt.x,pt.y);});
-      const lp=vpts[vpts.length-1],fp=vpts[0];
-      ctx.lineTo(lp.x,H-pB);ctx.lineTo(fp.x,H-pB);ctx.closePath();
-      ctx.fillStyle=grad;ctx.fill();
-      ctx.beginPath();ctx.strokeStyle=s.color;ctx.lineWidth=2;ctx.lineJoin='round';
-      fi=true;pts.forEach(pt=>{if(!pt)return;if(fi){ctx.moveTo(pt.x,pt.y);fi=false;}else ctx.lineTo(pt.x,pt.y);});
+
+      // fill only for highlighted
+      if(isHL){
+        const grad=ctx.createLinearGradient(0,pT,0,H-pB);
+        grad.addColorStop(0,s.color+'28');grad.addColorStop(1,s.color+'00');
+        ctx.beginPath();let fi=true;
+        pts.forEach(pt=>{if(!pt)return;if(fi){ctx.moveTo(pt.x,pt.y);fi=false;}else ctx.lineTo(pt.x,pt.y);});
+        const lp=vpts[vpts.length-1],fp=vpts[0];
+        ctx.lineTo(lp.x,H-pB);ctx.lineTo(fp.x,H-pB);ctx.closePath();
+        ctx.fillStyle=grad;ctx.fill();
+      }
+
+      ctx.globalAlpha=alpha;
+      ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=isHL?2.5:1;ctx.lineJoin='round';
+      let fi=true;pts.forEach(pt=>{if(!pt)return;if(fi){ctx.moveTo(pt.x,pt.y);fi=false;}else ctx.lineTo(pt.x,pt.y);});
       ctx.stroke();
       pts.forEach((pt,i)=>{
         if(!pt) return;
-        ctx.beginPath();ctx.arc(pt.x,pt.y,4,0,Math.PI*2);ctx.fillStyle=s.color;ctx.fill();
-        ctx.fillStyle=s.color;ctx.font='bold 9px monospace';ctx.textAlign='center';
-        ctx.fillText(s.data[i],pt.x,pt.y-8);
+        ctx.beginPath();ctx.arc(pt.x,pt.y,isHL?4:2.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+        if(isHL){
+          ctx.fillStyle=col;ctx.font='bold 9px monospace';ctx.textAlign='center';
+          ctx.fillText(s.data[i],pt.x,pt.y-8);
+        }
       });
+      ctx.globalAlpha=1;
     });
 
-    const lw=(W-pL-pR)/series.length;
-    series.forEach((s,i)=>{
-      const x=pL+i*lw;
-      ctx.fillStyle=s.color;ctx.fillRect(x,H-8,12,3);
-      ctx.fillStyle=s.color;ctx.font='8px monospace';ctx.textAlign='left';
-      ctx.fillText(s.label,x+16,H-4);
-    });
+    // build HTML legend buttons (replace old canvas legend)
+    const legWrap = document.getElementById('chart-legend');
+    if(legWrap){
+      legWrap.innerHTML = ps.map(p=>{
+        const isActive = chartHighlight===null || chartHighlight===p.name;
+        return `<button class="chart-leg-btn" data-name="${p.name}"
+          onclick="toggleChartPlayer('${p.name}')"
+          style="font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
+            padding:5px 12px;border-radius:3px;cursor:pointer;
+            border:1px solid ${isActive?PCSS[p.name]:'#1e2a3a'};
+            background:${isActive?PCSS[p.name]+'18':'transparent'};
+            color:${isActive?PCSS[p.name]:'#2a3a4a'};
+            opacity:${chartHighlight===null||chartHighlight===p.name?'1':'0.3'};
+            transition:all .15s;text-transform:uppercase;">
+          ${p.name}
+        </button>`;
+      }).join('');
+    }
   });
 }
 
