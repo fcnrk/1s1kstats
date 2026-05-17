@@ -132,7 +132,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 
 <div class="header">
   <h1>🎯 CS2 Team Stats Dashboard</h1>
-  <p>12 sessions · 75 maps per player · Apr 13 – May 15, 2025</p>
+  <p>13 sessions · 82 maps per player · Apr 13 – May 17, 2025</p>
 </div>
 
 <div class="tab-bar">
@@ -243,9 +243,16 @@ const RAW = [
 ['MAY 15','Inferno',   4, 13,  4,  7,    9, 3, 11,  5,   0,  1,  1,  2,    8,30,10,19,   38, 113,  94,  68,   0,   1,   0,   1],
 ['MAY 15','Brewery',  11, 12, 11,  9,   12, 9, 11, 11,   2,  2,  1,  1,   26,30,25,21,   73,  74,  79,  63,   0,   1,   1,   0],
 ['MAY 15','Assembly', 11,  8, 11,  4,    6,10,  6, 12,   0,  2,  0,  0,   24,23,25, 8,   87,  90,  86,  33,   1,   0,   1,   0],
+['MAY 17','Poseidon',  6, 10, 10,  6,   12, 6,  6,  8,   2,  2,  3,  0,   17,22,25,17,   64,  95,  80,  63,   0,   1,   1,   0],
+['MAY 17','Sanctum',  10,  3,  9,  2,    2, 9,  3, 10,   1,  1,  1,  2,   26, 7,18, 8,   97,  52,  81,  27,   1,   0,   1,   0],
+['MAY 17','Nuke',      4, 10,  3,  9,   10, 2,  9,  5,   1,  2,  1,  2,    9,21, 9,23,   47,  88,  44,  79,   0,   1,   0,   1],
+['MAY 17','Overpass',  8, 11,  5,  5,    6, 4,  9, 10,   4,  2,  1,  0,   20,25,14,12,   82,  96,  70,  59,   1,   1,   0,   0],
+['MAY 17','Memento',  11, 12,  8,  9,   10, 9, 11, 10,   2,  2,  4,  2,   26,29,22,22,   94,  86,  62,  68, 0.5, 0.5, 0.5, 0.5],
+['MAY 17','Rooftop',   3, 11,  9,  4,   11, 4,  3,  9,   1,  2,  2,  1,    7,24,19, 9,   50, 101,  93,  52,   0,   1,   1,   0],
+['MAY 17','Inferno',  12,  8, 10,  7,    8,10,  9, 10,   2,  1,  1,  2,   30,15,22,21,   90,  76,  79,  58,   0,   1,   1,   0],
 ];
 
-const SESSIONS = ['APR 13','APR 18','APR 19','APR 22','APR 27','APR 28','MAY 3','MAY 4','MAY 8','MAY 10','MAY 11','MAY 15'];
+const SESSIONS = ['APR 13','APR 18','APR 19','APR 22','APR 27','APR 28','MAY 3','MAY 4','MAY 8','MAY 10','MAY 11','MAY 15','MAY 17'];
 const PLAYERS  = ['Orh+','Kabooooom','MrFancyPants','SilentOat'];
 const COLORS   = { 'Orh+':'#58a6ff','Kabooooom':'#f78166','MrFancyPants':'#d2a8ff','SilentOat':'#ffa657' };
 const CHIPS    = { 'Orh+':'chip-orh','Kabooooom':'chip-kab','MrFancyPants':'chip-mrfp','SilentOat':'chip-sil' };
@@ -465,50 +472,39 @@ function bestTeam(map) {
 
 // ── Balanced team data (precomputed: minimise score diff per map) ──
 const BALANCED = {
-  'Overpass': { t1:['Orh+','MrFancyPants'],   t2:['Kabooooom','SilentOat'],   diff:0.7,  n:9,
-    stats:{ 'Orh+':{adr:76.0,kd:1.15,wr:.50}, 'MrFancyPants':{adr:74.0,kd:0.99,wr:.50},
-            'Kabooooom':{adr:86.3,kd:1.22,wr:.72}, 'SilentOat':{adr:62.8,kd:0.89,wr:.28} },
-    note:'The most balanced map in the pool (diff: 0.7) with strong data (9 maps). Both teams sit at 50% win rate on one side. Pick this for guaranteed tension.' },
-  'Poseidon': { t1:['Orh+','Kabooooom'],      t2:['MrFancyPants','SilentOat'], diff:0.8,  n:8,
-    stats:{ 'Orh+':{adr:85.8,kd:1.06,wr:.50}, 'Kabooooom':{adr:67.8,kd:1.44,wr:.25},
-            'MrFancyPants':{adr:60.8,kd:1.05,wr:.62}, 'SilentOat':{adr:71.2,kd:1.15,wr:.62} },
-    note:'Near-perfect balance. Orh+ peaks here (85.8 ADR) but Kabooooom underperforms — making this pair surprisingly beatable.' },
-  'Assembly': { t1:['Orh+','Kabooooom'],      t2:['MrFancyPants','SilentOat'], diff:2.1,  n:5,
-    stats:{ 'Orh+':{adr:73.2,kd:1.11,wr:.70}, 'Kabooooom':{adr:69.0,kd:0.88,wr:.50},
-            'MrFancyPants':{adr:89.2,kd:2.41,wr:.70}, 'SilentOat':{adr:45.6,kd:0.60,wr:.10} },
-    note:'MrFancyPants dominates K/D (2.41) but SilentOat drags that team down hard (10% WR) — keeps it close. Expect explosive rounds.' },
-  'Palais':   { t1:['Orh+','SilentOat'],      t2:['Kabooooom','MrFancyPants'], diff:3.2,  n:1,
-    stats:{ 'Orh+':{adr:112.0,kd:1.56,wr:.50}, 'SilentOat':{adr:45.0,kd:0.58,wr:.50},
-            'Kabooooom':{adr:86.0,kd:1.75,wr:.50}, 'MrFancyPants':{adr:59.0,kd:0.54,wr:.50} },
-    note:'Only 1 map played — balance looks good but treat with caution. Both teams have one strong and one weak player.' },
-  'Sanctum':  { t1:['Orh+','Kabooooom'],      t2:['MrFancyPants','SilentOat'], diff:7.1,  n:6,
-    stats:{ 'Orh+':{adr:67.7,kd:0.75,wr:.42}, 'Kabooooom':{adr:80.8,kd:1.75,wr:.75},
-            'MrFancyPants':{adr:80.7,kd:1.17,wr:.42}, 'SilentOat':{adr:73.2,kd:1.24,wr:.42} },
-    note:'MrFancyPants and SilentOat are both solid here — combined they match Kabooooom\'s power while Orh+ is below par.' },
-  'Brewery':  { t1:['Orh+','MrFancyPants'],   t2:['Kabooooom','SilentOat'],   diff:7.7,  n:8,
-    stats:{ 'Orh+':{adr:77.9,kd:1.03,wr:.56}, 'MrFancyPants':{adr:63.9,kd:0.90,wr:.56},
-            'Kabooooom':{adr:87.5,kd:1.86,wr:.81}, 'SilentOat':{adr:70.6,kd:0.77,wr:.06} },
-    note:'SilentOat barely wins on Brewery (6% WR) — which neutralises Kabooooom\'s dominance. Still somewhat lopsided so expect Kabooooom to carry.' },
-  'Nuke':     { t1:['Orh+','MrFancyPants'],   t2:['Kabooooom','SilentOat'],   diff:7.9,  n:13,
-    stats:{ 'Orh+':{adr:71.4,kd:1.06,wr:.50}, 'MrFancyPants':{adr:74.6,kd:1.67,wr:.65},
-            'Kabooooom':{adr:83.2,kd:1.57,wr:.65}, 'SilentOat':{adr:61.2,kd:1.01,wr:.27} },
-    note:'Most data in the pool (13 maps). Was the tightest map but recent sessions shifted it — Kabooooom\'s consistency gives his team an edge now.' },
-  'Inferno':  { t1:['Orh+','Kabooooom'],      t2:['MrFancyPants','SilentOat'], diff:12.8, n:11,
-    stats:{ 'Orh+':{adr:66.1,kd:0.64,wr:.27}, 'Kabooooom':{adr:86.7,kd:2.38,wr:.82},
-            'MrFancyPants':{adr:79.6,kd:1.75,wr:.55}, 'SilentOat':{adr:64.2,kd:0.83,wr:.36} },
-    note:'Was the tightest map (diff 0.1) but Kabooooom\'s recent dominance (82% WR, 2.38 K/D) has blown it wide open. Different split now — still the best available pairing.' },
-  'Whistle':  { t1:['Orh+','Kabooooom'],      t2:['MrFancyPants','SilentOat'], diff:13.8, n:2,
-    stats:{ 'Orh+':{adr:62.0,kd:1.11,wr:1.0}, 'Kabooooom':{adr:79.0,kd:0.85,wr:.50},
-            'MrFancyPants':{adr:56.0,kd:0.64,wr:.00}, 'SilentOat':{adr:92.5,kd:2.10,wr:.50} },
-    note:'SilentOat is the best individual here (92.5 ADR), but MrFancyPants is weak — balances out. Only 2 maps played, high variance.' },
-  'Memento':  { t1:['Orh+','SilentOat'],      t2:['Kabooooom','MrFancyPants'], diff:15.4, n:6,
-    stats:{ 'Orh+':{adr:72.2,kd:1.21,wr:.67}, 'SilentOat':{adr:72.5,kd:0.91,wr:.17},
-            'Kabooooom':{adr:91.0,kd:2.26,wr:.83}, 'MrFancyPants':{adr:51.7,kd:0.61,wr:.33} },
-    note:'Kabooooom is king here (91 ADR, 83% WR) so pairing him with MrFancyPants\'s weakness is the best leveller. Still the least balanced map.' },
-  'Rooftop':  { t1:['Orh+','Kabooooom'],      t2:['MrFancyPants','SilentOat'], diff:19.7, n:6,
-    stats:{ 'Orh+':{adr:65.5,kd:0.72,wr:.25}, 'Kabooooom':{adr:91.0,kd:2.38,wr:.75},
-            'MrFancyPants':{adr:61.7,kd:1.26,wr:.42}, 'SilentOat':{adr:70.2,kd:0.91,wr:.58} },
-    note:'Kabooooom carries hard (2.38 K/D, 91 ADR) but Orh+ struggles badly (25% WR). Most lopsided map — even the optimal split can\'t fix it.' },
+  'Overpass': { t1:['Orh+','MrFancyPants'], t2:['Kabooooom','SilentOat'], diff:0.9, n:10,
+    stats:{ 'Orh+':{adr:76.6,kd:1.05,wr:0.55}, 'Kabooooom':{adr:87.3,kd:1.25,wr:0.75}, 'MrFancyPants':{adr:73.6,kd:0.92,wr:0.45}, 'SilentOat':{adr:62.4,kd:0.82,wr:0.25} },
+    note:'Near-perfect balance (diff 0.9). Kabooooom leads with 87.3 ADR but the teams are evenly matched. 10 maps of solid data.' },
+  'Palais': { t1:['Orh+','SilentOat'], t2:['Kabooooom','MrFancyPants'], diff:3.2, n:1,
+    stats:{ 'Orh+':{adr:112.0,kd:1.56,wr:0.50}, 'Kabooooom':{adr:86.0,kd:1.75,wr:0.50}, 'MrFancyPants':{adr:59.0,kd:0.54,wr:0.50}, 'SilentOat':{adr:45.0,kd:0.58,wr:0.50} },
+    note:'Good balance (diff 3.2). Orh+ is strongest (112.0 ADR, 1.56 K/D) but pairing compensates. 1 maps.' },
+  'Nuke': { t1:['Orh+','MrFancyPants'], t2:['Kabooooom','SilentOat'], diff:3.5, n:12,
+    stats:{ 'Orh+':{adr:64.4,kd:0.85,wr:0.46}, 'Kabooooom':{adr:77.7,kd:1.24,wr:0.62}, 'MrFancyPants':{adr:64.7,kd:1.13,wr:0.54}, 'SilentOat':{adr:58.1,kd:0.82,wr:0.38} },
+    note:'Good balance (diff 3.5). Kabooooom is strongest (77.7 ADR, 1.24 K/D) but pairing compensates. 12 maps.' },
+  'Poseidon': { t1:['Orh+','Kabooooom'], t2:['MrFancyPants','SilentOat'], diff:4.0, n:9,
+    stats:{ 'Orh+':{adr:83.3,kd:0.89,wr:0.44}, 'Kabooooom':{adr:70.8,kd:1.07,wr:0.33}, 'MrFancyPants':{adr:62.9,kd:1.04,wr:0.67}, 'SilentOat':{adr:70.3,kd:1.0,wr:0.56} },
+    note:'Good balance (diff 4.0). Orh+ is strongest (83.3 ADR, 0.89 K/D) but pairing compensates. 9 maps.' },
+  'Sanctum': { t1:['Orh+','Kabooooom'], t2:['MrFancyPants','SilentOat'], diff:4.1, n:7,
+    stats:{ 'Orh+':{adr:71.9,kd:0.86,wr:0.50}, 'Kabooooom':{adr:76.7,kd:0.98,wr:0.64}, 'MrFancyPants':{adr:80.7,kd:1.22,wr:0.50}, 'SilentOat':{adr:66.6,kd:0.95,wr:0.36} },
+    note:'Good balance (diff 4.1). MrFancyPants is strongest (80.7 ADR, 1.22 K/D) but pairing compensates. 7 maps.' },
+  'Assembly': { t1:['Orh+','Kabooooom'], t2:['MrFancyPants','SilentOat'], diff:4.6, n:5,
+    stats:{ 'Orh+':{adr:73.2,kd:1.02,wr:0.70}, 'Kabooooom':{adr:69.0,kd:0.79,wr:0.50}, 'MrFancyPants':{adr:89.2,kd:2.03,wr:0.70}, 'SilentOat':{adr:45.6,kd:0.58,wr:0.10} },
+    note:'Good balance (diff 4.6). MrFancyPants is strongest (89.2 ADR, 2.03 K/D) but pairing compensates. 5 maps.' },
+  'Brewery': { t1:['Orh+','MrFancyPants'], t2:['Kabooooom','SilentOat'], diff:5.4, n:8,
+    stats:{ 'Orh+':{adr:77.9,kd:1.0,wr:0.56}, 'Kabooooom':{adr:87.5,kd:1.57,wr:0.81}, 'MrFancyPants':{adr:63.9,kd:0.84,wr:0.56}, 'SilentOat':{adr:70.6,kd:0.76,wr:0.06} },
+    note:'Good balance (diff 5.4). Kabooooom is strongest (87.5 ADR, 1.57 K/D) but pairing compensates. 8 maps.' },
+  'Inferno': { t1:['Orh+','MrFancyPants'], t2:['Kabooooom','SilentOat'], diff:7.1, n:11,
+    stats:{ 'Orh+':{adr:67.6,kd:0.69,wr:0.27}, 'Kabooooom':{adr:85.9,kd:1.49,wr:0.82}, 'MrFancyPants':{adr:81.0,kd:1.26,wr:0.64}, 'SilentOat':{adr:61.5,kd:0.75,wr:0.27} },
+    note:'Moderate balance (diff 7.1). Kabooooom dominates (85.9 ADR, 82% WR). Best available split. 11 maps.' },
+  'Memento': { t1:['Orh+','SilentOat'], t2:['Kabooooom','MrFancyPants'], diff:7.6, n:7,
+    stats:{ 'Orh+':{adr:75.3,kd:1.09,wr:0.64}, 'Kabooooom':{adr:90.3,kd:1.51,wr:0.79}, 'MrFancyPants':{adr:53.1,kd:0.64,wr:0.36}, 'SilentOat':{adr:71.9,kd:0.91,wr:0.21} },
+    note:'Moderate balance (diff 7.6). Kabooooom dominates (90.3 ADR, 79% WR). Best available split. 7 maps.' },
+  'Rooftop': { t1:['Orh+','Kabooooom'], t2:['MrFancyPants','SilentOat'], diff:15.4, n:7,
+    stats:{ 'Orh+':{adr:63.3,kd:0.66,wr:0.21}, 'Kabooooom':{adr:92.4,kd:1.8,wr:0.79}, 'MrFancyPants':{adr:66.1,kd:1.11,wr:0.50}, 'SilentOat':{adr:67.6,kd:0.72,wr:0.50} },
+    note:'Lopsided (diff 15.4). Kabooooom carries hard (92.4 ADR, 1.8 K/D, 79% WR). Even the optimal split can\'t fully equalise. 7 maps.' },
+  'Whistle': { t1:['Orh+','Kabooooom'], t2:['MrFancyPants','SilentOat'], diff:16.5, n:2,
+    stats:{ 'Orh+':{adr:62.0,kd:1.0,wr:1.00}, 'Kabooooom':{adr:79.0,kd:0.85,wr:0.50}, 'MrFancyPants':{adr:56.0,kd:0.64,wr:0.00}, 'SilentOat':{adr:92.5,kd:1.73,wr:0.50} },
+    note:'Lopsided (diff 16.5). SilentOat carries hard (92.5 ADR, 1.73 K/D, 50% WR). Even the optimal split can\'t fully equalise. 2 maps.' }
 };
 
 // Balance tier
@@ -537,9 +533,9 @@ function buildRecs() {
     <div class="insight-banner">
       <h3>🎯 Top 3 Maps for a Close Game</h3>
       <p>
-        <strong>1. Overpass</strong> — diff 0.7, 9 maps of data. <strong>Orh+ + MrFancyPants</strong> vs <strong>Kabooooom + SilentOat</strong>. The tightest balance — both sides at 50% win rate.<br>
-        <strong>2. Poseidon</strong> — diff 0.8, 8 maps. <strong>Orh+ + Kabooooom</strong> vs <strong>MrFancyPants + SilentOat</strong>. Orh+ peaks here so this one feels intense despite the balance.<br>
-        <strong>3. Assembly</strong> — diff 2.1, 5 maps. <strong>Orh+ + Kabooooom</strong> vs <strong>MrFancyPants + SilentOat</strong>. MrFancyPants dominates but SilentOat\'s 10% WR keeps it close.
+        <strong>1. Overpass</strong> — diff 0.9, 10 maps of data. <strong>Orh+ + MrFancyPants</strong> vs <strong>Kabooooom + SilentOat</strong>. Still the tightest balance — Kabooooom leads ADR but teams are evenly matched.<br>
+        <strong>2. Nuke</strong> — diff 3.5, 12 maps. <strong>Orh+ + MrFancyPants</strong> vs <strong>Kabooooom + SilentOat</strong>. Most data in the pool. Kabooooom strongest but pairing compensates well.<br>
+        <strong>3. Poseidon</strong> — diff 4.0, 9 maps. <strong>Orh+ + Kabooooom</strong> vs <strong>MrFancyPants + SilentOat</strong>. Orh+ peaks here (83.3 ADR) making this feel intense despite good balance.
       </p>
     </div>
 
