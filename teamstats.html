@@ -126,13 +126,20 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 .rec-card ul { list-style: none; }
 .rec-card li { font-size: 11px; color: var(--muted); padding: 3px 0; line-height: 1.5; }
 .rec-card li::before { content: "→ "; color: var(--green); font-weight: 700; }
+
+/* H2H MATRIX */
+.h2h-table { width:100%; border-collapse:collapse; font-size:12px; }
+.h2h-table th, .h2h-table td { border:1px solid var(--border); padding:10px 8px; text-align:center; }
+.h2h-table th { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+.h2h-pct { font-size:15px; font-weight:800; }
+.h2h-rec { font-size:10px; color:var(--muted); margin-top:2px; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>🎯 CS2 Team Stats Dashboard</h1>
-  <p>25 sessions · 142 maps per player · Apr 13 – Jun 24, 2026</p>
+  <p>29 sessions · 189 maps per player · Apr 13 – Jul 8, 2026</p>
 </div>
 
 <div class="tab-bar">
@@ -143,6 +150,9 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
   <div class="tab" onclick="switchTab('assists')"><span class="tab-icon">🤝</span>Assists</div>
   <div class="tab" onclick="switchTab('score')"><span class="tab-icon">🏅</span>Score</div>
   <div class="tab" onclick="switchTab('winrate')"><span class="tab-icon">🏆</span>Win Rate</div>
+  <div class="tab" onclick="switchTab('duos')"><span class="tab-icon">👥</span>Duos</div>
+  <div class="tab" onclick="switchTab('rivals')"><span class="tab-icon">⚔️</span>Rivalries</div>
+  <div class="tab" onclick="switchTab('form')"><span class="tab-icon">🔥</span>Form</div>
   <div class="tab" onclick="switchTab('recs')"><span class="tab-icon">🗺️</span>Team Recs</div>
 </div>
 
@@ -154,6 +164,9 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 <div id="tab-assists" class="tab-content"></div>
 <div id="tab-score" class="tab-content"></div>
 <div id="tab-winrate" class="tab-content"></div>
+<div id="tab-duos" class="tab-content"></div>
+<div id="tab-rivals" class="tab-content"></div>
+<div id="tab-form" class="tab-content"></div>
 <div id="tab-recs" class="tab-content"></div>
 
 <script>
@@ -235,7 +248,7 @@ const RAW = [
 ['MAY 10','Overpass', 10, 11,  9, 10,   11, 9, 10, 10,   2,  2,  1,  2,   22,24,19,24,   76,  88,  86,  70,  .5,  .5,  .5,  .5],
 ['MAY 10','Brewery',   3, 13,  7,  6,   10, 3,  6, 10,   1,  0,  3,  0,    7,27,18,12,   58, 110,  86,  64,   0,   1,   1,   0],
 ['MAY 10','Inferno2',  8, 12,  9,  9,   11, 8, 10,  9,   2,  1,  1,  3,   18,21,18,23,   73,  85,  64,  88,   0,   1,   0,   1],
-['MAY 10','Nuke2',     8, 11, 14,  8,   10,11,  9, 11,   3,  2,  1,  1,   21,21,25,17,   64,  76,  83,  56,   1,   1,   1,   0],
+['MAY 10','Nuke2',     8, 11, 14,  8,   10,11,  9, 11,   3,  2,  1,  1,   21,21,25,17,   64,  76,  83,  56,   1,   0,   1,   0],
 ['MAY 11','Inferno',   3, 12,  6,  7,   10, 4,  9,  5,   1,  2,  1,  3,    7,32,15,21,   83, 109,  65,  66,   0,   1,   0,   1],
 ['MAY 11','Nuke',      9,  8, 11,  4,    7, 9,  5, 11,   2,  0,  2,  0,   21,22,31,12,   75,  94, 113,  48,   1,   0,   1,   0],
 ['MAY 11','Overpass',  8, 11, 10, 10,   12, 8, 10,  9,   4,  4,  0,  0,   22,26,20,22,   72,  82,  82,  69,   0,   1,   1,   0],
@@ -735,10 +748,225 @@ function buildRecs() {
 
 buildRecs();
 
+
+// ─── TEAM COMPOSITION ────────────────────────────────────────────────────────
+// MATE[i] = teammate of Orh+ on RAW row i (K=Kabooooom, M=MrFancyPants, S=SilentOat)
+const MATE = 'KSKKSMKKSSSKSSSSSMSSKMSKSMMKMSSKMMMMSKSKKKSKMSKSKKMMKSKMMMKKSKKKMSMMMMSKMSMSMMKSSSMKKMKKSKSMSSMKKSMKSSSMKMSKSSKMSKSKMKSKSMMKSSSKMKKSKMMSSKMSSKSSSSMKKMSMKKKSSKMSMMMMSMSMSMKKMMSKKMSSMMMSKKSMK';
+const MATE_IDX = { K:1, M:2, S:3 };
+function teamsOf(i) {
+  let m = MATE_IDX[MATE[i]];
+  if (m === undefined) { // fallback for future rows: derive from won flags (non-tie only)
+    const w0 = RAW[i][IDX.won];
+    m = [1,2,3].find(pi => RAW[i][IDX.won+pi] === w0);
+  }
+  return [[0, m], [1,2,3].filter(x => x !== m)];
+}
+const chipOf = n => `<span class="player-chip ${CHIPS[n]}">${n}</span>`;
+const TT = { backgroundColor:'#1c2128', borderColor:'#30363d', borderWidth:1, titleColor:'#e6edf3', bodyColor:'#c9d1d9' };
+
+function mkBar(id, labels, data, colors, {fmt=v=>v, min, max}={}) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const c = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors.map(c=>c+'40'), borderColor: colors, borderWidth: 2, borderRadius: 6 }] },
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: {display:false}, tooltip: { ...TT, callbacks: { label: c => ` ${fmt(c.parsed.x)}` } } },
+      scales: {
+        x: { grid:{color:GC}, ticks:{color:TC,font:{size:11}}, ...(min!=null?{min}:{}), ...(max!=null?{max}:{}) },
+        y: { grid:{display:false}, ticks:{color:TC,font:{size:11}} }
+      }
+    }
+  });
+  allCharts[id] = c;
+  return c;
+}
+
+// ─── DUOS TAB ────────────────────────────────────────────────────────────────
+function buildDuos() {
+  const duo = {};
+  RAW.forEach((r, i) => {
+    teamsOf(i).forEach(team => {
+      const key = team.slice().sort((a,b)=>a-b).join('-');
+      const d = duo[key] ??= { n:0, w:0, l:0, t:0, adrsum:0, adrn:0 };
+      d.n++;
+      const won = r[IDX.won + team[0]];
+      if (won === 0.5) d.t++; else if (won === 1) d.w++; else d.l++;
+      team.forEach(pi => { const a = r[IDX.adr+pi]; if (a !== null) { d.adrsum += a; d.adrn++; } });
+    });
+  });
+  const entries = Object.entries(duo).map(([key, d]) => {
+    const [a, b] = key.split('-').map(Number);
+    return { names:[PLAYERS[a], PLAYERS[b]], colA: COLORS[PLAYERS[a]], ...d,
+             wr: (d.w + 0.5*d.t) / d.n, adr: d.adrsum / d.adrn };
+  }).sort((x, y) => y.wr - x.wr);
+  const best = entries[0], worst = entries[entries.length-1];
+
+  const container = document.getElementById('tab-duos');
+  let html = `
+    <div class="rec-header">👥 Duo Chemistry</div>
+    <p class="rec-sub">All 6 possible duos across ${RAW.length} maps. Win rate counts ties as half a win.</p>
+    <div class="insight-banner">
+      <h3>🧪 Chemistry Report</h3>
+      <p><strong>Best duo: ${best.names.join(' + ')}</strong> — ${(best.wr*100).toFixed(1)}% win rate (${best.w}W–${best.l}L–${best.t}T over ${best.n} maps).<br>
+      <strong>Worst duo: ${worst.names.join(' + ')}</strong> — ${(worst.wr*100).toFixed(1)}% win rate (${worst.w}W–${worst.l}L–${worst.t}T over ${worst.n} maps).</p>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="card-title">🏆 Win Rate by Duo</div><canvas id="duo-wr" height="230"></canvas></div>
+      <div class="chart-card"><div class="card-title">💥 Avg Player ADR When Paired</div><canvas id="duo-adr" height="230"></canvas></div>
+    </div>
+    <div class="map-grid">`;
+  entries.forEach(e => {
+    html += `
+      <div class="map-card">
+        <div class="team-players" style="margin-bottom:10px">${e.names.map(chipOf).join('')}</div>
+        <div style="font-size:24px;font-weight:800;color:${e.wr>=0.5?'var(--green)':'var(--red)'}">${(e.wr*100).toFixed(1)}%</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${e.w}W – ${e.l}L – ${e.t}T · ${e.n} maps</div>
+        <div class="map-insight">Avg player ADR together: <strong>${e.adr.toFixed(1)}</strong></div>
+      </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+  setTimeout(() => {
+    const labels = entries.map(e => e.names.join(' + '));
+    mkBar('duo-wr', labels, entries.map(e=>+(e.wr*100).toFixed(1)), entries.map(e=>e.colA), {fmt:v=>v+'% WR', min:0, max:100});
+    mkBar('duo-adr', labels, entries.map(e=>+e.adr.toFixed(1)), entries.map(e=>e.colA), {fmt:v=>v+' ADR', min:50});
+  }, 0);
+}
+buildDuos();
+
+// ─── RIVALRIES TAB ───────────────────────────────────────────────────────────
+function buildRivals() {
+  const h2h = {}; // key 'a-b' (a<b): w = a's wins over b
+  RAW.forEach((r, i) => {
+    const [t1, t2] = teamsOf(i);
+    t1.forEach(a => t2.forEach(b => {
+      const [x, y] = a < b ? [a, b] : [b, a];
+      const d = h2h[`${x}-${y}`] ??= { w:0, l:0, t:0, n:0 };
+      d.n++;
+      const wx = r[IDX.won + x];
+      if (wx === 0.5) d.t++; else if (wx === 1) d.w++; else d.l++;
+    }));
+  });
+  const rec = (a, b) => { // record of a vs b
+    const [x, y] = a < b ? [a, b] : [b, a];
+    const d = h2h[`${x}-${y}`];
+    return a < b ? d : { w:d.l, l:d.w, t:d.t, n:d.n };
+  };
+  const pairs = Object.keys(h2h).map(k => {
+    const [a, b] = k.split('-').map(Number);
+    const d = h2h[k];
+    const wr = (d.w + 0.5*d.t) / d.n;
+    return { a, b, ...d, wr, edge: Math.abs(wr - 0.5) };
+  });
+  const dominant = [...pairs].sort((x,y)=>y.edge-x.edge)[0];
+  const closest  = [...pairs].sort((x,y)=>x.edge-y.edge)[0];
+  const domWinner = dominant.wr >= 0.5 ? [dominant.a, dominant.b] : [dominant.b, dominant.a];
+
+  let matrix = `<table class="h2h-table"><tr><th></th>${PLAYERS.map(p=>`<th style="color:${COLORS[p]}">vs ${p}</th>`).join('')}</tr>`;
+  PLAYERS.forEach((rp, ri) => {
+    matrix += `<tr><th style="color:${COLORS[rp]};text-align:right">${rp}</th>`;
+    PLAYERS.forEach((cp, ci) => {
+      if (ri === ci) { matrix += `<td style="color:var(--border)">—</td>`; return; }
+      const d = rec(ri, ci);
+      const wr = (d.w + 0.5*d.t) / d.n;
+      const col = wr > 0.52 ? 'var(--green)' : wr < 0.48 ? 'var(--red)' : 'var(--yellow)';
+      matrix += `<td><div class="h2h-pct" style="color:${col}">${(wr*100).toFixed(0)}%</div><div class="h2h-rec">${d.w}–${d.l}–${d.t}</div></td>`;
+    });
+    matrix += `</tr>`;
+  });
+  matrix += `</table>`;
+
+  const container = document.getElementById('tab-rivals');
+  let html = `
+    <div class="rec-header">⚔️ Head-to-Head Rivalries</div>
+    <p class="rec-sub">When two players are on <strong>opposite</strong> teams — who ends up winning? Read rows: the row player's win rate against the column player.</p>
+    <div class="insight-banner">
+      <h3>🥊 Rivalry Report</h3>
+      <p><strong>Most one-sided: ${PLAYERS[domWinner[0]]}</strong> owns <strong>${PLAYERS[domWinner[1]]}</strong> — ${(Math.max(dominant.wr,1-dominant.wr)*100).toFixed(1)}% win rate across ${dominant.n} maps.<br>
+      <strong>Closest rivalry: ${PLAYERS[closest.a]} vs ${PLAYERS[closest.b]}</strong> — ${(closest.wr*100).toFixed(1)}% / ${((1-closest.wr)*100).toFixed(1)}% over ${closest.n} maps. Dead even.</p>
+    </div>
+    <div class="chart-card full" style="margin-bottom:14px">
+      <div class="card-title">⚔️ Head-to-Head Matrix (row beats column)</div>
+      ${matrix}
+    </div>
+    <div class="map-grid">`;
+  [...pairs].sort((x,y)=>y.edge-x.edge).forEach(p => {
+    const lead = p.wr >= 0.5 ? [p.a, p.b, p.w, p.l] : [p.b, p.a, p.l, p.w];
+    const wr = Math.max(p.wr, 1-p.wr);
+    html += `
+      <div class="map-card">
+        <div class="team-players" style="margin-bottom:10px">${chipOf(PLAYERS[lead[0]])}<span style="font-size:10px;font-weight:700;color:var(--muted);align-self:center">leads</span>${chipOf(PLAYERS[lead[1]])}</div>
+        <div style="font-size:24px;font-weight:800;color:${COLORS[PLAYERS[lead[0]]]}">${(wr*100).toFixed(1)}%</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${lead[2]}–${lead[3]}–${p.t} · ${p.n} maps opposed</div>
+      </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+buildRivals();
+
+// ─── FORM TAB ────────────────────────────────────────────────────────────────
+function buildForm() {
+  const avg = arr => { const v = arr.filter(x => x !== null && !isNaN(x)); return v.reduce((a,b)=>a+b,0)/v.length; };
+  const base = PLAYERS.map((_, pi) => ({
+    adr:   avg(sessData.adr.map(s => s[pi])),
+    score: avg(sessData.score.map(s => s[pi]))
+  }));
+  // Form index: 100 = player's own average level (blend of ADR and scoreboard score)
+  const form = SESSIONS.map((_, si) => PLAYERS.map((_, pi) => {
+    const a = sessData.adr[si][pi], sc = sessData.score[si][pi];
+    if (a === null || sc === null) return null;
+    return 100 * (0.5 * a / base[pi].adr + 0.5 * sc / base[pi].score);
+  }));
+  const container = document.getElementById('tab-form');
+  let cards = '';
+  PLAYERS.forEach((name, pi) => {
+    const vals = form.map(s => s[pi]).filter(v => v !== null);
+    const last3 = vals.slice(-3);
+    const cur = last3.reduce((a,b)=>a+b,0)/last3.length;
+    let streak = 0, dir = 0;
+    for (let si = form.length-1; si >= 0; si--) {
+      const f = form[si][pi]; if (f === null) continue;
+      const d = f >= 100 ? 1 : -1;
+      if (dir === 0) dir = d;
+      if (d === dir) streak++; else break;
+    }
+    const up = cur >= 100;
+    cards += `
+      <div class="stat-card">
+        <div class="pname" style="color:${COLORS[name]}">${name}</div>
+        <div class="big-val ${up?'delta-up':'delta-dn'}">${up?'▲':'▼'} ${cur.toFixed(0)}</div>
+        <div class="sub">${dir>0?'🔥 hot':'🧊 cold'} streak: ${streak} session${streak===1?'':'s'} ${dir>0?'above':'below'} their average</div>
+      </div>`;
+  });
+  container.innerHTML = `
+    <div class="rec-header">🔥 Form Tracker</div>
+    <p class="rec-sub">Form index per session: 100 = that player's own long-run average (50% ADR + 50% scoreboard score). Above 100 = playing better than usual. Cards show last-3-session form.</p>
+    <div class="stat-row">${cards}</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="card-title">📈 Form Index by Session</div>
+        <canvas id="form-main" height="240"></canvas>
+        <div class="legend" id="form-legend"></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title">🌊 Rolling 3-Session Form</div>
+        <canvas id="form-smooth" height="240"></canvas>
+      </div>
+    </div>`;
+  setTimeout(() => {
+    mkChart('form-main', mkDatasets(form), {min:40, max:170, label:'Form (100 = personal avg)', yFmt:v=>v.toFixed(0)});
+    mkLegend('form-legend', 'form-main');
+    mkChart('form-smooth', mkSmoothDatasets(form), {min:60, max:150, yFmt:v=>v.toFixed(0)});
+  }, 0);
+}
+buildForm();
+
 // ─── TAB SWITCHING ──────────────────────────────────────────────────────────
 function switchTab(id) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    const ids = ['adr','kills','deaths','kd','assists','score','winrate','recs'];
+    const ids = ['adr','kills','deaths','kd','assists','score','winrate','duos','rivals','form','recs'];
     t.classList.toggle('active', ids[i] === id);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
